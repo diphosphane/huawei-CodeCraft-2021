@@ -5,3 +5,4 @@
 !/.vscode/launch.json
 *.zip
 /typings
+__pycache__/
