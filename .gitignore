@@ -1,5 +1,7 @@
 /SDK/*
 !/SDK/SDK_python
-/.vscode
+/SDK/SDK_python/CodeCraft-2021/src/*
+/.vscode/*
+!/.vscode/launch.json
 *.zip
 /typings
