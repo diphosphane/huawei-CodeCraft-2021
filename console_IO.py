@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import List, Tuple, Dict, Set
+from typing import List, Tuple, Dict, Set, DefaultDict
 from cloud_foundation import Server, ServerType, VM, VM_Type
+from collections import defaultdict
 
 class DailyRequest():
     add_cmd = True
@@ -39,14 +40,52 @@ class OutputCommand():
     # (vm_id, server_id[, node])   -> migration instance
     # (server_id[, node])          -> deployment instance (corresponds to input)
     # (0, B)
-    purchase_server_type_num = '(purchase, %d)'
-    purchase_server_model_num = '(%s, %d)'
-    migration_num = '(migration, %d)'
-    migration_vm_server_node = '()'
+    purchase_server_type_num = '(purchase, %d)\n'
+    purchase_server_model_num = '(%s, %d)\n'
+    migration_num = '(migration, %d)\n'
+    migration_vm_server_node = '(%d, %d, %s)\n'
+    migration_vm_server = '(%d, %d)\n'
+    deploy_server_node = '(%d, %s)\n'
+    deploy_server = '(%d)\n'
+    command_list: List['OutputCommand'] = []
+
     def __init__(self) -> None:
-        
-        pass
-    pass
+        self.server_dict: DefaultDict[str, int] =  DefaultDict(int)        # [(server_model, number), ...]
+        # self.migration_list: List[Tuple[int, int, str]] = [] # [(vm_id, server_id, node), ...]   node=A/B/null
+        # self.deploy_list: List[Tuple[int, int]] = []         # [(server_id, node)]      mode=A/B/null
+        self.migration_str = ''
+        self.migration_count = 0
+        self.deploy_str = ''
+    
+    @classmethod
+    def new_instance(cls):
+        cls.command_list.append(OutputCommand())
+    
+    def add_server(self, server_type: ServerType, num: int):
+        self.server_dict[server_type.model] += num
+    
+    def add_migration(self, vm: VM, server: Server, node: str):
+        if node:
+            self.migration_str += self.migration_vm_server_node % (vm.id, server.id, node)
+            # self.migration_list.append((vm.id, server.id, node))
+        else:
+            self.migration_str += self.migration_vm_server % (vm.id, server.id)
+            # self.migration_list.append((vm.id, server.id, ''))
+        self.migration_count += 1
+    
+    def add_new_vm_dispatch(self, server_id: int, node: str):
+        if node:
+            self.deploy_str += self.deploy_server_node % (server_id, node)
+        else:
+            self.deploy_str += self.deploy_server % (server_id)
+    
+    def print(self):
+        print(self.purchase_server_type_num % len(self.server_dict), end='')
+        for model, num in self.server_dict.items():
+            print(self.purchase_server_model_num % (model, num), end='')
+        print(self.migration_num % self.migration_count, end='')
+        print(self.migration_str, end='')
+        print(self.deploy_str, end='')
 
 def read_server_vm_inp() -> Tuple[List[ServerType], List[VM_Type]]:
     server_type_num = int(input())

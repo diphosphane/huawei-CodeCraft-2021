@@ -6,3 +6,4 @@
 *.zip
 /typings
 __pycache__/
+test.py

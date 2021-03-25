@@ -89,6 +89,7 @@ class Server():
         self.left_remain_mem = self.right_remain_mem = self.mem_lmt
         # add instance into cls.server_dict
         id = self.__class__.server_num
+        self.id = id
         self.__class__.server_dict[id] = self
         self.__class__.server_num += 1
     
