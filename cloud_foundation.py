@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import List, Tuple, Dict, Set
+from typing import Tuple, Dict, Set
 
 class ServerType():
     type_dict: Dict[str, 'ServerType'] = {}   # model -> ServerType
@@ -52,14 +52,17 @@ class VM():
         self.id = id
         self.__class__.vm_dict[id] = self
         self._type = model_type
+        self.node_core = self._type.node_core
+        self.node_mem = self._type.node_mem
+        self.double = self._type.double
     
     @property
-    def node_core(self) -> int:
-        return self._type.node_core
+    def memory(self) -> int:
+        return self._type.memory
     
     @property
-    def node_mem(self) -> int:
-        return self._type.node_mem
+    def core(self) -> int:
+        return self._type.core
     
     @classmethod
     def get_vm_by_id(cls, id: int) -> 'VM':
@@ -128,29 +131,33 @@ class Server():
         else:
             raise ValueError
     
-    def occupy_left_resource(self, vm: 'VM'):
+    def occupy_left_resource(self, vm: 'VM') -> Tuple[int, int]:  # remain_core, remain_mem
         self.left_core += vm.node_core          # resource usage
         self.left_mem += vm.node_mem
         self.left_remain_core -= vm.node_core   # resource remain
         self.left_remain_mem -= vm.node_mem
+        return self.left_remain_core, self.left_remain_mem
     
-    def release_left_resource(self, vm: 'VM'):
+    def release_left_resource(self, vm: 'VM') -> Tuple[int, int]:  # remain_core, remain_mem
         self.left_core -= vm.node_core          # resource usage
         self.left_mem -= vm.node_mem
         self.left_remain_core += vm.node_core   # resource remain
         self.left_remain_mem += vm.node_mem
+        return self.left_remain_core, self.left_remain_mem
     
-    def occupy_right_resource(self, vm: 'VM'):
+    def occupy_right_resource(self, vm: 'VM') -> Tuple[int, int]:  # remain_core, remain_mem
         self.right_core += vm.node_core         # resource usage
         self.right_mem += vm.node_mem
         self.right_remain_core -= vm.node_core  # resource remain
         self.right_remain_mem -= vm.node_mem
+        return self.right_remain_core, self.right_remain_mem
     
-    def release_right_resource(self, vm: 'VM'):
+    def release_right_resource(self, vm: 'VM') -> Tuple[int, int]:  # remain_core, remain_mem
         self.right_core -= vm.node_core         # resource usage
         self.right_mem -= vm.node_mem
         self.right_remain_core += vm.node_core  # resource remain
         self.right_remain_mem += vm.node_mem
+        return self.right_remain_core, self.right_remain_mem
 
     @classmethod
     def get_server_by_id(cls, id: int) -> 'Server':
@@ -159,62 +166,4 @@ class Server():
     @property
     def model(self) -> str:
         return self._type.model
-
-
-class DailyRequest():
-    add_cmd = True
-    del_cmd = False
-    def __init__(self) -> None:
-        self.operation: List[bool] = []
-        self.id: List[int] = []
-        self.vm: List[VM] = []
-        self.read_one_day()
-    
-    def read_one_day(self):
-        task_num = int(input())
-        for _ in range(task_num):
-            line = input().strip()[1: -1]
-            command_args = line.split(',')
-            if command_args[0].strip() == 'add':
-                vm_model, id = command_args[1].strip(), int(command_args[2])
-                vm_type = VM_Type.type_dict[vm_model]
-                vm = VM(vm_type, id)
-                self.operation.append(self.add_cmd)
-                self.id.append(id)
-                self.vm.append(vm)
-            else:
-                id = int(command_args[1])
-                self.operation.append(False)
-                self.id.append(id)
-                self.vm.append(VM.get_vm_by_id(id))
-
-
-def read_server_vm_inp() -> Tuple[List[ServerType], List[VM_Type]]:
-    server_type_num = int(input())
-    server_type_list: List[ServerType] = []
-    for _ in range(server_type_num):
-        line = input().strip()[1: -1]
-        model, core, memory, price, cost_each_day = line.split(',')
-        server_type_list.append(ServerType( model.strip(),
-                                            int(core), 
-                                            int(memory), 
-                                            int(price), 
-                                            int(cost_each_day)))
-    vm_type_num = int(input())
-    vm_type_list: List[VM_Type] = []
-    for _ in range(vm_type_num):
-        line = input().strip()[1: -1]
-        model, core, memory, double = line.split(',')
-        vm_type_list.append(VM_Type(model.strip(), 
-                                    int(core),
-                                    int(memory),
-                                    bool(int(double))))
-    return server_type_list, vm_type_list
-
-def read_daily_inp() -> Tuple[int, List[DailyRequest]]:
-    day_num = int(input())
-    requests: List[DailyRequest] = []
-    for _ in range(day_num):
-        requests.append(DailyRequest())
-    return day_num, requests
 
