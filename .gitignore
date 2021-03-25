@@ -1,0 +1,5 @@
+/SDK/*
+!/SDK/SDK_python
+/.vscode
+*.zip
+/typings
