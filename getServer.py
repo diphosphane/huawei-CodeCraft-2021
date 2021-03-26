@@ -53,7 +53,7 @@ def get_server_list(server_types: List[ServerType], vm_type: List[VM_Type], requ
     memory_max = max([i[1] for i in usage_list])
 
     server_list = []
-    print(usage_list)
+    # print(usage_list)
     server_number = int(max(core_max//best_servers[0].core, memory_max//best_servers[0].memory)*magicn_number)
     for _ in range(server_number):
         server_list.append(Server(best_servers[0]))

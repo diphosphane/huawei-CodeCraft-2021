@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# from console_IO import OutputCommand
 from typing import Tuple, Dict, Set
 
 class ServerType():
@@ -67,6 +68,10 @@ class VM():
     @classmethod
     def get_vm_by_id(cls, id: int) -> 'VM':
         return cls.vm_dict[id]
+    
+    def del_vm(self):
+        svr = self.__class__.vm_dispach_dict[self.id]
+        svr.del_vm_by_instance(self)
 
 
 class Server():
@@ -87,29 +92,34 @@ class Server():
         # core & mem remain
         self.left_remain_core = self.right_remain_core = self.core_lmt
         self.left_remain_mem = self.right_remain_mem = self.mem_lmt
+        #####  we must create server before dispatch it, so comment it temporary  #####
+        self.id: int
         # add instance into cls.server_dict
-        id = self.__class__.server_num
-        self.id = id
-        self.__class__.server_dict[id] = self
-        self.__class__.server_num += 1
+        # id = self.__class__.server_num
+        # self.id = id
+        # self.__class__.server_dict[id] = self
+        # self.__class__.server_num += 1
     
-    def add_vm__by_type(self, id: int, vm_type: 'VM_Type', side: int):  # -1: left  0: double  1: right
+    def add_vm_by_type(self, id: int, vm_type: 'VM_Type', side: int, output: 'OutputCommand'):  # -1: left  0: double  1: right
         vm = VM(vm_type, id)
-        self.add_vm_by_instance(vm, side)
+        self.add_vm_by_instance(vm, side, output)
     
-    def add_vm_by_instance(self, vm: 'VM', side: int):  # -1: left  0: double  1: right
+    def add_vm_by_instance(self, vm: 'VM', side: int, output: 'OutputCommand'):  # -1: left  0: double  1: right
         VM.vm_dispach_dict[vm.id] = self
         id = vm.id
         if side == -1:          # check core and memory >=0
             self.occupy_left_resource(vm)
             self.left_vm_id_set.add(id)
+            output.add_new_vm_dispatch(self.id, 'A')
         elif side == 0:
             self.occupy_left_resource(vm)
             self.occupy_right_resource(vm)
             self.double_vm_id_set.add(id)
+            output.add_new_vm_dispatch(self.id, '')
         elif side == 1:
             self.occupy_right_resource(vm)
             self.right_vm_id_set.add(id)
+            output.add_new_vm_dispatch(self.id, 'B')
         else:
             raise ValueError
     
@@ -132,11 +142,19 @@ class Server():
         else:
             raise ValueError
     
+    def can_put_vm_left(self, vm: 'VM'):
+        return vm.node_core <= self.left_remain_core and vm.node_mem <= self.left_remain_mem
+    
+    def can_put_vm_right(self, vm: 'VM'):
+        return vm.node_core <= self.right_remain_core and vm.node_mem <= self.right_remain_mem
+    
     def occupy_left_resource(self, vm: 'VM') -> Tuple[int, int]:  # remain_core, remain_mem
         self.left_core += vm.node_core          # resource usage
         self.left_mem += vm.node_mem
         self.left_remain_core -= vm.node_core   # resource remain
         self.left_remain_mem -= vm.node_mem
+        if self.left_remain_core < 0 or self.left_remain_mem < 0:
+            raise ValueError
         return self.left_remain_core, self.left_remain_mem
     
     def release_left_resource(self, vm: 'VM') -> Tuple[int, int]:  # remain_core, remain_mem
@@ -151,6 +169,8 @@ class Server():
         self.right_mem += vm.node_mem
         self.right_remain_core -= vm.node_core  # resource remain
         self.right_remain_mem -= vm.node_mem
+        if self.right_core < 0 or self.right_remain_mem < 0:
+            raise ValueError
         return self.right_remain_core, self.right_remain_mem
     
     def release_right_resource(self, vm: 'VM') -> Tuple[int, int]:  # remain_core, remain_mem
@@ -167,4 +187,13 @@ class Server():
     @property
     def model(self) -> str:
         return self._type.model
+    
+    def activate_server(self, output: 'OutputCommand'):
+        if id in self.server_dict.keys():
+            raise ValueError
+        else:
+            output.add_server(self._type)
+            self.id = self.__class__.server_num
+            self.server_dict[self.__class__.server_num] = self
+            self.__class__.server_num += 1
 

@@ -18,7 +18,8 @@ if __name__ == "__main__":
     day_num, request_list = read_daily_inp()
     # server_list
     server_list = get_server_list(server_type, vm_type, request_list, 1, 256, 128, 128, 1.618)
-    print(len(server_list), [i._type.cost_each_day for i in server_list[:4]])
+    # print(len(server_list), [i._type.cost_each_day for i in server_list[:4]])
+    greedy = Greedy(server_list, request_list)
+    greedy.normal_greedy()
     # purchase server
     # Greedy()
-    a = input('chunk procedure')  # todo: delete it before upload program
