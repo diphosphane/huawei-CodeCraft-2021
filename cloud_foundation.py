@@ -102,24 +102,24 @@ class Server():
     
     def add_vm_by_type(self, id: int, vm_type: 'VM_Type', side: int, output: 'OutputCommand'):  # -1: left  0: double  1: right
         vm = VM(vm_type, id)
-        self.add_vm_by_instance(vm, side, output)
+        self.add_vm_by_instance(vm, side)
     
-    def add_vm_by_instance(self, vm: 'VM', side: int, output: 'OutputCommand'):  # -1: left  0: double  1: right
+    def add_vm_by_instance(self, vm: 'VM', side: int):  # -1: left  0: double  1: right
         VM.vm_dispach_dict[vm.id] = self
         id = vm.id
         if side == -1:          # check core and memory >=0
             self.occupy_left_resource(vm)
             self.left_vm_id_set.add(id)
-            output.add_new_vm_dispatch(self.id, 'A')
+            # output.add_new_vm_dispatch(self.id, 'A')
         elif side == 0:
             self.occupy_left_resource(vm)
             self.occupy_right_resource(vm)
             self.double_vm_id_set.add(id)
-            output.add_new_vm_dispatch(self.id, '')
+            # output.add_new_vm_dispatch(self.id, '')
         elif side == 1:
             self.occupy_right_resource(vm)
             self.right_vm_id_set.add(id)
-            output.add_new_vm_dispatch(self.id, 'B')
+            # output.add_new_vm_dispatch(self.id, 'B')
         else:
             raise ValueError
     

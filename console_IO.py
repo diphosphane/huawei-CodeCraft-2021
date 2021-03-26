@@ -57,6 +57,8 @@ class OutputCommand():
         self.migration_str = ''
         self.migration_count = 0
         self.deploy_str = ''
+        self.idx_of_deploy: List[int] = []
+        self.deploy_unorder_str_list: List[str] = []
     
     @classmethod
     def new_instance(cls):
@@ -80,13 +82,25 @@ class OutputCommand():
         else:
             self.deploy_str += self.deploy_server % (server_id)
     
+    def add_unorder_vm_dispatch(self, server_id: int, node: str, idx: int):
+        if node:
+            tmp = self.deploy_server_node % (server_id, node)
+        else:
+            tmp = self.deploy_server % (server_id)
+        self.deploy_unorder_str_list.append(tmp)
+        self.idx_of_deploy.append(idx)
+    
     def print(self):
         print(self.purchase_server_type_num % len(self.server_dict), end='')
         for model, num in self.server_dict.items():
             print(self.purchase_server_model_num % (model, num), end='')
         print(self.migration_num % self.migration_count, end='')
         print(self.migration_str, end='')
-        print(self.deploy_str, end='')
+        if self.idx_of_deploy:
+            for deploy_txt in (x[1] for x in sorted(zip(self.idx_of_deploy, self.deploy_unorder_str_list), key=lambda x: x[0])):
+                print(deploy_txt, end='')
+        else:
+            print(self.deploy_str, end='')
         sys.stdout.flush()
 
 def read_server_vm_inp() -> Tuple[List[ServerType], List[VM_Type]]:

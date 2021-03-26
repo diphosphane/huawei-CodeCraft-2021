@@ -72,7 +72,8 @@ class Greedy():
                 found = False
                 for svr in self.svr_in_use:
                     if svr.can_put_vm_left(vm) and svr.can_put_vm_right(vm):
-                        svr.add_vm_by_instance(vm, 0, output)
+                        svr.add_vm_by_instance(vm, 0)
+                        output.add_unorder_vm_dispatch(svr.id, '', vm_idx)
                         found = True
                         break
                 if not found:
@@ -83,7 +84,8 @@ class Greedy():
                         if svr.can_put_vm_left(vm):
                             self.svr_in_use.append(svr)
                             svr.activate_server(output)
-                            svr.add_vm_by_instance(vm, 0, output)
+                            svr.add_vm_by_instance(vm, 0)
+                            output.add_unorder_vm_dispatch(svr.id, '', vm_idx)
                             found = True
                             break
                     if not found: raise ValueError
@@ -92,11 +94,13 @@ class Greedy():
                 found = False
                 for svr in self.svr_in_use:
                     if svr.can_put_vm_left(vm):
-                        svr.add_vm_by_instance(vm, -1, output)
+                        svr.add_vm_by_instance(vm, -1)
+                        output.add_unorder_vm_dispatch(svr.id, 'A', vm_idx)
                         found = True
                         break
                     if svr.can_put_vm_right(vm):
-                        svr.add_vm_by_instance(vm, 1, output)
+                        svr.add_vm_by_instance(vm, 1)
+                        output.add_unorder_vm_dispatch(svr.id, 'B', vm_idx)
                         found = True
                         break
                 if not found:
@@ -104,10 +108,11 @@ class Greedy():
                     for svr_idx in self.svr_not_use_idx:
                         self.svr_not_use_idx.remove(svr_idx)
                         svr = self.server_list[svr_idx]
-                        if svr.can_put_vm_left(vm):
+                        if svr.can_put_vm_right(vm):
                             self.svr_in_use.append(svr)
                             svr.activate_server(output)
-                            svr.add_vm_by_instance(vm, 1, output)  # add vm to right side
+                            svr.add_vm_by_instance(vm, 1)  # add vm to right side
+                            output.add_unorder_vm_dispatch(svr.id, 'B', vm_idx)
                             found = True
                             break
                     if not found: raise ValueError
