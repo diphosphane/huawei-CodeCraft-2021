@@ -16,17 +16,17 @@ def get_usage_list(vm_type: List[VM_Type], request_list: List[DailyRequest]):
         memory_max_today = memory
         node_core_max_today = node_core
         node_mem_max_today = node_mem
-        for event in range(len(requests.operation)):
-            if requests.operation[event]:
-                core += requests.vm[event].core
-                memory += requests.vm[event].memory
-                node_core += requests.vm[event].node_core
-                node_mem += requests.vm[event].node_mem
+        for event in range(len(requests.operation_list)):
+            if requests.operation_list[event]:
+                core += requests.vm_list[event].core
+                memory += requests.vm_list[event].memory
+                node_core += requests.vm_list[event].node_core
+                node_mem += requests.vm_list[event].node_mem
             else:
-                core -= requests.vm[event].core
-                memory -= requests.vm[event].memory
-                node_core -= requests.vm[event].node_core
-                node_mem -= requests.vm[event].node_mem
+                core -= requests.vm_list[event].core
+                memory -= requests.vm_list[event].memory
+                node_core -= requests.vm_list[event].node_core
+                node_mem -= requests.vm_list[event].node_mem
             core_max_today = max(core_max_today, core)
             memory_max_today = max(memory_max_today, memory)
             node_core_max_today = max(node_core_max_today, node_core)
