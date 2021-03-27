@@ -169,7 +169,7 @@ class Server():
         self.right_mem += vm.node_mem
         self.right_remain_core -= vm.node_core  # resource remain
         self.right_remain_mem -= vm.node_mem
-        if self.right_core < 0 or self.right_remain_mem < 0:
+        if self.right_remain_core < 0 or self.right_remain_mem < 0:
             raise ValueError
         return self.right_remain_core, self.right_remain_mem
     
@@ -188,11 +188,11 @@ class Server():
     def model(self) -> str:
         return self._type.model
     
-    def activate_server(self, output: 'OutputCommand'):
+    def activate_server(self):
         if id in self.server_dict.keys():
             raise ValueError
         else:
-            output.add_server(self._type)
+            # output.add_server(self._type)
             self.id = self.__class__.server_num
             self.server_dict[self.__class__.server_num] = self
             self.__class__.server_num += 1

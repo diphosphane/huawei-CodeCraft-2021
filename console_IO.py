@@ -52,11 +52,14 @@ class OutputCommand():
 
     def __init__(self) -> None:
         self.server_dict: DefaultDict[str, int] =  defaultdict(int)        # [(server_model, number), ...]
+        # self.server_purchase_list: List[str] = []        # [(server_model, number), ...]
         # self.migration_list: List[Tuple[int, int, str]] = [] # [(vm_id, server_id, node), ...]   node=A/B/null
         # self.deploy_list: List[Tuple[int, int]] = []         # [(server_id, node)]      mode=A/B/null
         self.migration_str = ''
         self.migration_count = 0
         self.deploy_str = ''
+        self.server_to_be_activate: List[Server] = []
+        self.deploy_history: List[Tuple[Server, str]] = []
         self.idx_of_deploy: List[int] = []
         self.deploy_unorder_str_list: List[str] = []
     
@@ -65,6 +68,8 @@ class OutputCommand():
         cls.command_list.append(OutputCommand())
     
     def add_server(self, server_type: ServerType, num: int=1):
+        # for _ in range(num):
+        #     self.server_purchase_list.append(server_type.model)
         self.server_dict[server_type.model] += num
     
     def add_migration(self, vm: VM, server: Server, node: str):
@@ -76,31 +81,63 @@ class OutputCommand():
             # self.migration_list.append((vm.id, server.id, ''))
         self.migration_count += 1
     
-    def add_new_vm_dispatch(self, server_id: int, node: str):
-        if node:
-            self.deploy_str += self.deploy_server_node % (server_id, node)
-        else:
-            self.deploy_str += self.deploy_server % (server_id)
+    def add_new_vm_dispatch(self, server: 'Server', node: str, new_svr: bool=False):
+        if new_svr:
+            self.add_server(server._type)
+            self.server_to_be_activate.append(server)
+        # if node:
+        #     self.deploy_str += self.deploy_server_node % (server_id, node)
+        # else:
+        #     self.deploy_str += self.deploy_server % (server_id)
+        self.deploy_history.append((server, node))
     
-    def add_unorder_vm_dispatch(self, server_id: int, node: str, idx: int):
-        if node:
-            tmp = self.deploy_server_node % (server_id, node)
-        else:
-            tmp = self.deploy_server % (server_id)
-        self.deploy_unorder_str_list.append(tmp)
+    def add_unorder_vm_dispatch(self, server: 'Server', node: str, idx: int, new_svr: bool=False):
+        if new_svr:
+            self.add_server(server._type)
+            self.server_to_be_activate.append(server)
+        # if node:
+        #     tmp = self.deploy_server_node % (server_id, node)
+        # else:
+        #     tmp = self.deploy_server % (server_id)
+        # self.deploy_unorder_str_list.append(tmp)
         self.idx_of_deploy.append(idx)
+        self.deploy_history.append((server, node))
+    
+    def get_vm_dispatch_str(self) -> List[str]:
+        # activate server
+        for model in self.server_dict.keys():
+            for svr in self.server_to_be_activate:
+                if svr.model == model:
+                    svr.activate_server()
+        return_list: List[str] = []
+        for svr, node in self.deploy_history:
+            if node:
+                tmp = self.deploy_server_node % (svr.id, node)
+            else:
+                tmp = self.deploy_server % svr.id
+            return_list.append(tmp)
+        return return_list
     
     def print(self):
         print(self.purchase_server_type_num % len(self.server_dict), end='')
+        # print(self.purchase_server_type_num % len(self.server_purchase_list), end='')
         for model, num in self.server_dict.items():
             print(self.purchase_server_model_num % (model, num), end='')
+        # for model in self.server_purchase_list:
+        #     print(self.purchase_server_model_num % (model, 1), end='')
         print(self.migration_num % self.migration_count, end='')
         print(self.migration_str, end='')
         if self.idx_of_deploy:
-            for deploy_txt in (x[1] for x in sorted(zip(self.idx_of_deploy, self.deploy_unorder_str_list), key=lambda x: x[0])):
-                print(deploy_txt, end='')
+            for line in (x[1] for x in sorted(zip(self.idx_of_deploy, self.get_vm_dispatch_str()), key=lambda x: x[0])):
+                print(line, end='')
         else:
-            print(self.deploy_str, end='')
+            for line in self.get_vm_dispatch_str():
+                print(line, end='')
+        # if self.idx_of_deploy:
+        #     for deploy_txt in (x[1] for x in sorted(zip(self.idx_of_deploy, self.deploy_unorder_str_list), key=lambda x: x[0])):
+        #         print(deploy_txt, end='')
+        # else:
+        #     print(self.deploy_str, end='')
         sys.stdout.flush()
 
 def read_server_vm_inp() -> Tuple[List[ServerType], List[VM_Type]]:

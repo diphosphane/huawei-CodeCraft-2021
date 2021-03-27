@@ -8,9 +8,10 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "CodeCraft-2021.py",
+            // "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["<", "training-1.txt"]
+            "args": ["<", "training-2.txt"]
         }
     ],
 }
