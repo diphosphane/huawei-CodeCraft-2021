@@ -28,10 +28,11 @@ if __name__ == "__main__":
         model = svr_type.model
         server_list.append(Server(ServerType.get_type_by_model(model)))
     # server_list = [server_pre] +  server_list
-    greedy = Greedy(server_list, request_list)
+    greedy = Greedy(server_list, request_list, server_type)
     # greedy.normal_greedy()
     # greedy.order_greedy()
-    greedy.random_greedy()
+    # greedy.random_greedy()
+    greedy.smart_greedy()
     # purchase server
     # Greedy()
     end = time.time()

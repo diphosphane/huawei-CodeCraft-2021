@@ -7,13 +7,15 @@ from random import choice
 from cloud_foundation import *
 from console_IO import *
 import numpy as np
+from next_server import get_server_type
 
 
 
 class Greedy():
-    def __init__(self, server_list: List[Server], daily_requests: List[DailyRequest]) -> None:
+    def __init__(self, server_list: List[Server], daily_requests: List[DailyRequest], svr_type_list: List[ServerType]) -> None:
         self.server_list = server_list
         self.daily_requests = daily_requests
+        self.svr_type_list = svr_type_list
         # self.left_remain_core = np.array([ x.left_remain_core for x in self.server_list ])
         # self.right_remain_core = np.array([ x.right_remain_core for x in self.server_list ])
         # self.left_remain_mem = np.array([ x.left_remain_mem for x in self.server_list ])
@@ -196,6 +198,62 @@ class Greedy():
             # print(f'iter time: {iter_end_time - iter_start_time}')
         # end_time = time.time()
         # print(f'all time: {end_time - start_time}')
+
+
+    def smart_greedy(self):
+        # start_time = time.time()
+        for iter, rq in enumerate(self.daily_requests):
+            # iter_start_time = time.time()
+            output = OutputCommand()
+            vm_double_idxs, vm_single_idxs, vm_del_idxs = self.vm_type_classify(rq)
+            # double occupy vm
+            for vm_idx in vm_double_idxs:
+                vm = VM.get_vm_by_id(rq.id_list[vm_idx])
+                found = False
+                for svr in self.svr_in_use:
+                    if svr.can_put_vm_left(vm) and svr.can_put_vm_right(vm):
+                        svr.add_vm_by_instance(vm, 0)
+                        output.add_unorder_vm_dispatch(svr, '', vm_idx)
+                        found = True
+                        break
+                if not found:
+                    svr_type = get_server_type(vm, self.svr_type_list, len(self.daily_requests) - iter)
+                    svr = Server(svr_type)
+                    self.svr_in_use.append(svr)
+                    # svr.activate_server(output)
+                    svr.add_vm_by_instance(vm, 0)
+                    output.add_unorder_vm_dispatch(svr, '', vm_idx, new_svr=True)
+            for vm_idx in vm_single_idxs:
+                vm = VM.get_vm_by_id(rq.id_list[vm_idx])
+                found = False
+                for svr in self.svr_in_use:
+                    if svr.can_put_vm_left(vm):
+                        svr.add_vm_by_instance(vm, -1)
+                        output.add_unorder_vm_dispatch(svr, 'A', vm_idx)
+                        found = True
+                        break
+                    if svr.can_put_vm_right(vm):
+                        svr.add_vm_by_instance(vm, 1)
+                        output.add_unorder_vm_dispatch(svr, 'B', vm_idx)
+                        found = True
+                        break
+                if not found:
+                    svr_type = get_server_type(vm, self.svr_type_list, len(self.daily_requests) - iter)
+                    svr = Server(svr_type)
+                    self.svr_in_use.append(svr)
+                    # svr.activate_server(output)
+                    svr.add_vm_by_instance(vm, 1)  # add vm to right side
+                    output.add_unorder_vm_dispatch(svr, 'B', vm_idx, new_svr=True)
+            for vm_idx in vm_del_idxs:
+                vm = VM.get_vm_by_id(rq.id_list[vm_idx])
+                vm.del_vm()
+            output.print()
+            # iter_end_time = time.time()
+            # print(f'iter time: {iter_end_time - iter_start_time}')
+        # end_time = time.time()
+        # print(f'all time: {end_time - start_time}')
+        pass
+
 
     def order_greedy(self):
         start_time = time.time()
